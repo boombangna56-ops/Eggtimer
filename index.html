@@ -1,265 +1,238 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Timer, Flame, RefreshCcw, Play, Pause, Bell, Egg, Info, CheckCircle2 } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Egg Timer ของพี่มี่คนสวย 🧡</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;600;700&display=swap');
+        body { 
+            font-family: 'Anuphan', sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .timer-circle {
+            transition: stroke-dashoffset 1s linear;
+        }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .animate-pop { animation: popIn 0.3s ease-out forwards; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-stone-50 min-h-screen flex flex-col items-center">
 
-const EGG_TYPES = [
-  {
-    id: 'soft-2',
-    name: 'ไข่ลวก (2 นาที)',
-    description: 'ไข่ขาวเริ่มสุกเป็นวุ้น ไข่แดงเป็นน้ำ',
-    time: 2,
-    color: 'bg-yellow-50',
-    borderColor: 'border-yellow-300',
-    textColor: 'text-yellow-700',
-    yolkColor: 'bg-yellow-300'
-  },
-  {
-    id: 'creamy-4',
-    name: 'ยางมะตูม (4 นาที)',
-    description: 'ไข่ขาวสุกพอประมาณ ไข่แดงเยิ้ม',
-    time: 4,
-    color: 'bg-orange-50',
-    borderColor: 'border-orange-300',
-    textColor: 'text-orange-700',
-    yolkColor: 'bg-orange-400'
-  },
-  {
-    id: 'medium-6',
-    name: 'เกือบสุก (6 นาที)',
-    description: 'ไข่ขาวสุก ไข่แดงสีส้มเริ่มเซ็ตตัว',
-    time: 6,
-    color: 'bg-orange-100',
-    borderColor: 'border-orange-400',
-    textColor: 'text-orange-800',
-    yolkColor: 'bg-orange-500'
-  },
-  {
-    id: 'hard-8',
-    name: 'สุกพอดี (8 นาที)',
-    description: 'ไข่ขาวสุกเต็มที่ ไข่แดงสุกสีส้มสวย',
-    time: 8,
-    color: 'bg-amber-100',
-    borderColor: 'border-amber-500',
-    textColor: 'text-amber-900',
-    yolkColor: 'bg-amber-600'
-  },
-  {
-    id: 'very-hard-10',
-    name: 'สุกมาก (10 นาที)',
-    description: 'สุกเต็มใบทั้งขาวและแดง ไข่แดงร่วน',
-    time: 10,
-    color: 'bg-stone-100',
-    borderColor: 'border-stone-400',
-    textColor: 'text-stone-800',
-    yolkColor: 'bg-stone-500'
-  }
-];
-
-const App = () => {
-  const [selectedEgg, setSelectedEgg] = useState(EGG_TYPES[1]);
-  const [timeLeft, setTimeLeft] = useState(EGG_TYPES[1].time * 60);
-  const [isRunning, setIsRunning] = useState(false);
-  const [isFinished, setIsFinished] = useState(false);
-  const timerRef = useRef(null);
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const startTimer = () => {
-    if (timeLeft > 0) {
-      setIsRunning(true);
-      setIsFinished(false);
-      // Request wake lock if supported (keeps mobile screen on)
-      if ('wakeLock' in navigator) {
-        navigator.wakeLock.request('screen').catch(() => {});
-      }
-    }
-  };
-
-  const pauseTimer = () => setIsRunning(false);
-
-  const resetTimer = () => {
-    setIsRunning(false);
-    setIsFinished(false);
-    setTimeLeft(selectedEgg.time * 60);
-  };
-
-  const handleEggSelect = (egg) => {
-    setSelectedEgg(egg);
-    setIsRunning(false);
-    setIsFinished(false);
-    setTimeLeft(egg.time * 60);
-  };
-
-  useEffect(() => {
-    if (isRunning && timeLeft > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0 && isRunning) {
-      setIsRunning(false);
-      setIsFinished(true);
-      if (navigator.vibrate) navigator.vibrate([500, 200, 500]); // Mobile vibration
-      clearInterval(timerRef.current);
-    } else {
-      clearInterval(timerRef.current);
-    }
-    return () => clearInterval(timerRef.current);
-  }, [isRunning, timeLeft]);
-
-  const totalSeconds = selectedEgg.time * 60;
-  const progress = ((totalSeconds - timeLeft) / totalSeconds) * 100;
-
-  return (
-    <div className="min-h-screen bg-stone-50 text-slate-900 font-sans flex flex-col items-center safe-top safe-bottom">
-      <header className="w-full max-w-md text-center py-6 px-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-orange-600 flex flex-col items-center justify-center gap-1">
-          <div className="flex items-center gap-2">
-            <Timer className="w-6 h-6 sm:w-8 sm:h-8" />
-            <span>Egg Timer</span>
-          </div>
-          <span className="text-lg sm:text-xl text-orange-500 font-medium flex items-center gap-1 animate-pulse">
-            ของพี่มี่คนสวย 🧡
-          </span>
+    <header class="w-full max-w-md text-center pt-8 pb-4 px-4">
+        <h1 class="text-2xl sm:text-3xl font-bold text-orange-600 flex flex-col items-center justify-center gap-1">
+            <div class="flex items-center gap-2">
+                <svg viewBox="0 0 24 24" class="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2h4M12 14v-4M4 13a8 8 0 0 1 8-7 8 8 0 1 1-5.3 14L4 17.6M9 17l1 1M14 17l-1 1"/></svg>
+                <span>Egg Timer</span>
+            </div>
+            <span class="text-lg sm:text-xl text-orange-500 font-medium flex items-center gap-1">
+                ของพี่มี่คนสวย 🧡
+            </span>
         </h1>
-        <p className="text-slate-400 text-xs sm:text-sm mt-1">ต้มไข่ให้เป๊ะ สวยเหมือนคนต้ม</p>
-      </header>
+    </header>
 
-      <main className="w-full max-w-md px-4 pb-12 flex-grow overflow-y-auto">
-        <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-stone-200 overflow-hidden border border-stone-100 transition-all duration-300">
-          {/* Timer Display Section - optimized for touch and visibility */}
-          <div className={`p-6 sm:p-10 flex flex-col items-center transition-colors duration-500 ${selectedEgg.color}`}>
-            <div className="relative w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center">
-              <svg className="absolute w-full h-full -rotate-90">
-                <circle cx="50%" cy="50%" r="45%" fill="transparent" stroke="white" strokeWidth="6" className="opacity-30" />
-                <circle
-                  cx="50%"
-                  cy="50%"
-                  r="45%"
-                  fill="transparent"
-                  stroke="currentColor"
-                  strokeWidth="8"
-                  strokeDasharray="283%"
-                  strokeDashoffset={`${283 - (283 * progress) / 100}%`}
-                  className={`${selectedEgg.textColor} transition-all duration-1000 ease-linear`}
-                  strokeLinecap="round"
-                />
-              </svg>
-              
-              <div className="flex flex-col items-center z-10">
-                  <div className={`w-20 h-24 sm:w-24 sm:h-28 rounded-full border-4 border-white bg-white relative shadow-lg flex items-center justify-center transition-transform ${isRunning ? 'scale-110' : 'scale-100'}`}>
-                      <div className={`absolute bottom-3 w-12 h-12 sm:w-14 sm:h-14 rounded-full blur-md opacity-70 ${selectedEgg.yolkColor}`}></div>
-                      <Egg className={`w-12 h-12 sm:w-16 sm:h-16 ${selectedEgg.textColor} opacity-20`} />
-                  </div>
-                  <div className="text-4xl sm:text-5xl font-mono font-black mt-3 tabular-nums drop-shadow-sm">
-                      {formatTime(timeLeft)}
-                  </div>
-              </div>
-            </div>
-
-            <div className="mt-8 flex gap-4 w-full justify-center">
-              {!isRunning ? (
-                <button 
-                  onClick={startTimer}
-                  disabled={isFinished}
-                  className="flex-1 max-w-[160px] flex items-center justify-center gap-2 bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-xl active:scale-90 transition-all disabled:opacity-50 touch-manipulation"
-                >
-                  <Play className="w-5 h-5 fill-current" />
-                  เริ่มต้ม
-                </button>
-              ) : (
-                <button 
-                  onClick={pauseTimer}
-                  className="flex-1 max-w-[160px] flex items-center justify-center gap-2 bg-white text-slate-900 py-4 rounded-2xl font-bold shadow-md active:scale-90 transition-all border border-slate-100 touch-manipulation"
-                >
-                  <Pause className="w-5 h-5 fill-current" />
-                  พักก่อน
-                </button>
-              )}
-              <button 
-                onClick={resetTimer}
-                className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center bg-white text-slate-500 rounded-2xl shadow-md border border-slate-100 active:rotate-180 transition-transform duration-500 touch-manipulation"
-              >
-                <RefreshCcw className="w-6 h-6" />
-              </button>
-            </div>
-          </div>
-
-          {/* Selection Area - Larger tap targets for mobile */}
-          <div className="p-5 sm:p-6">
-            <div className="flex items-center gap-2 mb-4 text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest">
-              <Flame className="w-4 h-4" />
-              เลือกระดับความสุกที่พี่มี่ต้องการ
-            </div>
-            
-            <div className="grid grid-cols-1 gap-2.5">
-              {EGG_TYPES.map((egg) => (
-                <button
-                  key={egg.id}
-                  onClick={() => handleEggSelect(egg)}
-                  className={`w-full p-4 rounded-2xl text-left border-2 flex items-center justify-between transition-all active:scale-[0.98] touch-manipulation ${
-                    selectedEgg.id === egg.id 
-                      ? `${egg.borderColor} ${egg.color} shadow-inner border-2` 
-                      : 'border-stone-50 hover:bg-stone-50'
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${egg.yolkColor} bg-opacity-20 shrink-0`}>
-                          <div className={`w-4 h-4 rounded-full ${egg.yolkColor} shadow-sm`}></div>
-                      </div>
-                      <div>
-                          <div className="font-bold text-sm sm:text-base text-slate-800">{egg.name}</div>
-                          <div className="text-[11px] sm:text-xs text-slate-500 leading-tight">{egg.description}</div>
-                      </div>
-                  </div>
-                  {selectedEgg.id === egg.id && (
-                    <div className={`${selectedEgg.textColor} bg-white p-1 rounded-full shadow-sm`}>
-                      <CheckCircle2 className="w-5 h-5" />
+    <main class="w-full max-w-md px-4 pb-20">
+        <div id="main-card" class="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-stone-100 transition-colors duration-500">
+            <!-- Visual Display -->
+            <div id="display-section" class="p-8 flex flex-col items-center transition-colors duration-500">
+                <div class="relative w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center">
+                    <svg class="absolute w-full h-full -rotate-90" viewBox="0 0 200 200">
+                        <circle cx="100" cy="100" r="80" fill="transparent" stroke="white" stroke-width="8" class="opacity-30" />
+                        <circle id="progress-bar" cx="100" cy="100" r="80" fill="transparent" stroke="currentColor" stroke-width="8" stroke-dasharray="502.6" stroke-dashoffset="502.6" class="timer-circle" stroke-linecap="round" />
+                    </svg>
+                    
+                    <div class="flex flex-col items-center z-10">
+                        <div id="egg-visual" class="w-16 h-20 sm:w-20 sm:h-24 rounded-full border-4 border-white bg-white relative shadow-md flex items-center justify-center transition-all">
+                            <div id="yolk-visual" class="absolute bottom-3 w-10 h-10 sm:w-12 sm:h-12 rounded-full blur-md opacity-60"></div>
+                            <svg viewBox="0 0 24 24" class="w-10 h-10 sm:w-14 sm:h-14 opacity-20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22a8 8 0 0 0 8-8c0-4.418-3.582-12-8-12S4 9.582 4 14a8 8 0 0 0 8 8z"/></svg>
+                        </div>
+                        <div id="timer-text" class="text-4xl sm:text-5xl font-mono font-black mt-4 tabular-nums text-slate-800">04:00</div>
                     </div>
-                  )}
-                </button>
-              ))}
+                </div>
+
+                <div class="mt-8 flex gap-4 w-full justify-center">
+                    <button id="btn-start" class="flex-1 max-w-[140px] flex items-center justify-center gap-2 bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-all">
+                        <svg viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor"><path d="m5 3 14 9-14 9V3z"/></svg>
+                        <span>เริ่มต้ม</span>
+                    </button>
+                    <button id="btn-pause" class="hidden flex-1 max-w-[140px] flex items-center justify-center gap-2 bg-white text-slate-900 py-4 rounded-2xl font-bold shadow-md active:scale-95 border border-slate-100 transition-all">
+                        <svg viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h4z"/></svg>
+                        <span>พักก่อน</span>
+                    </button>
+                    <button id="btn-reset" class="w-14 h-14 flex items-center justify-center bg-white text-slate-400 rounded-2xl shadow-md border border-slate-50 active:rotate-180 transition-transform duration-500">
+                        <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M3 21v-5h5"/></svg>
+                    </button>
+                </div>
             </div>
-          </div>
+
+            <!-- Selection Options -->
+            <div class="p-6">
+                <div class="flex items-center gap-2 mb-4 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+                    <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.254 1.216-3.156C7.302 11.391 7.749 12.29 8 13c.25.71.5 1.5.5 1.5z"/></svg>
+                    เลือกความสุกที่ต้องการ
+                </div>
+                <div id="egg-options" class="grid grid-cols-1 gap-2.5">
+                    <!-- Options will be generated here -->
+                </div>
+            </div>
         </div>
 
-        {/* Tip Box */}
-        <div className="mt-6 p-4 bg-orange-50 rounded-2xl border border-orange-100 flex gap-3 animate-pulse">
-          <Info className="w-5 h-5 text-orange-500 shrink-0" />
-          <p className="text-[11px] sm:text-xs text-orange-800 leading-relaxed">
-            <strong>พี่มี่รู้ไหม:</strong> เมื่อนาฬิกาดัง ให้รีบตักไข่แช่น้ำแข็งทันที ไข่จะปอกง่ายและสีสวยเป๊ะที่สุดครับ 🧡
-          </p>
-        </div>
-      </main>
-
-      {/* Mobile-Friendly Full-Screen Completion Modal */}
-      {isFinished && (
-        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-6 z-50 animate-in fade-in duration-300">
-          <div className="bg-white rounded-[3rem] p-8 max-w-xs w-full text-center shadow-2xl animate-in zoom-in-95 duration-300 border-4 border-orange-400">
-            <div className="w-24 h-24 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce shadow-inner">
-              <Bell className="w-12 h-12" />
-            </div>
-            <h2 className="text-2xl font-black text-slate-900 mb-2">ต้มเสร็จแล้ว!</h2>
-            <p className="text-slate-500 text-sm mb-8 leading-relaxed">
-              ไข่ระดับ <span className="font-bold text-orange-600 underline decoration-2 underline-offset-4">{selectedEgg.name}</span><br/>ของพี่มี่คนสวยพร้อมทานแล้วครับ 🧡
+        <div class="mt-6 p-4 bg-orange-50 rounded-2xl border border-orange-100 flex gap-3">
+            <svg viewBox="0 0 24 24" class="w-5 h-5 text-orange-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            <p class="text-[11px] text-orange-800 leading-relaxed">
+                <strong>Tip:</strong> ต้มเสร็จแล้วอย่าลืมแช่น้ำเย็นทันทีเพื่อให้ปอกง่ายและหยุดความร้อนนะครับ 🧡
             </p>
-            <button 
-              onClick={resetTimer} 
-              className="w-full bg-orange-500 text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-orange-200 active:scale-95 transition-all touch-manipulation"
-            >
-              รับทราบค่ะ!
-            </button>
-          </div>
         </div>
-      )}
+    </main>
 
-      <footer className="w-full text-center py-6 text-slate-300 text-[10px] font-medium tracking-widest uppercase">
-        &copy; 2024 Egg Timer ของพี่มี่คนสวย
-      </footer>
+    <!-- Success Modal -->
+    <div id="modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+        <div class="bg-white rounded-[2.5rem] p-8 max-w-xs w-full text-center shadow-2xl border-4 border-orange-400 animate-pop">
+            <div class="w-20 h-20 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                <svg viewBox="0 0 24 24" class="w-10 h-10 animate-bounce" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            </div>
+            <h2 class="text-2xl font-black text-slate-900 mb-1">เสร็จแล้วค่ะ!</h2>
+            <p class="text-slate-500 text-sm mb-6 leading-relaxed">
+                ระดับ <span id="finish-egg-name" class="font-bold text-orange-600"></span><br/>ของพี่มี่คนสวยพร้อมทานแล้ว 🧡
+            </p>
+            <button id="btn-close-modal" class="w-full bg-orange-500 text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-all">รับทราบค่ะ!</button>
+        </div>
     </div>
-  );
-};
 
-export default App;
+    <footer class="mt-auto py-6 text-slate-300 text-[10px] tracking-widest uppercase">
+        &copy; 2024 Egg Timer ของพี่มี่คนสวย
+    </footer>
+
+    <script>
+        const EGG_TYPES = [
+            { id: 'soft-2', name: 'ไข่ลวก (2 นาที)', description: 'ไข่ขาวเป็นวุ้น ไข่แดงเป็นน้ำ', time: 2, color: 'bg-yellow-50', textClass: 'text-yellow-700', yolk: 'bg-yellow-300', border: 'border-yellow-300' },
+            { id: 'creamy-4', name: 'ยางมะตูม (4 นาที)', description: 'ไข่ขาวสุกพอประมาณ ไข่แดงเยิ้ม', time: 4, color: 'bg-orange-50', textClass: 'text-orange-700', yolk: 'bg-orange-400', border: 'border-orange-300' },
+            { id: 'medium-6', name: 'เกือบสุก (6 นาที)', description: 'ไข่ขาวสุก ไข่แดงเริ่มเซ็ตตัว', time: 6, color: 'bg-orange-100', textClass: 'text-orange-800', yolk: 'bg-orange-500', border: 'border-orange-400' },
+            { id: 'hard-8', name: 'สุกพอดี (8 นาที)', description: 'ไข่ขาวสุกเต็มที่ ไข่แดงสุกสีสวย', time: 8, color: 'bg-amber-50', textClass: 'text-amber-900', yolk: 'bg-amber-600', border: 'border-amber-500' },
+            { id: 'very-hard-10', name: 'สุกมาก (10 นาที)', description: 'สุกเต็มใบทั้งขาวและแดง', time: 10, color: 'bg-stone-100', textClass: 'text-stone-800', yolk: 'bg-stone-500', border: 'border-stone-400' }
+        ];
+
+        let currentEgg = EGG_TYPES[1];
+        let timeLeft = currentEgg.time * 60;
+        let isRunning = false;
+        let timerId = null;
+        const circleTotal = 502.6;
+
+        // Elements
+        const timerText = document.getElementById('timer-text');
+        const progressBar = document.getElementById('progress-bar');
+        const displaySection = document.getElementById('display-section');
+        const eggVisual = document.getElementById('egg-visual');
+        const yolkVisual = document.getElementById('yolk-visual');
+        const btnStart = document.getElementById('btn-start');
+        const btnPause = document.getElementById('btn-pause');
+        const btnReset = document.getElementById('btn-reset');
+        const optionsGrid = document.getElementById('egg-options');
+        const modal = document.getElementById('modal');
+        const finishName = document.getElementById('finish-egg-name');
+
+        function formatTime(s) {
+            const m = Math.floor(s / 60);
+            const sec = s % 60;
+            return `${m}:${sec.toString().padStart(2, '0')}`;
+        }
+
+        function updateUI() {
+            timerText.innerText = formatTime(timeLeft);
+            const total = currentEgg.time * 60;
+            const progress = ((total - timeLeft) / total);
+            progressBar.style.strokeDashoffset = circleTotal - (progress * circleTotal);
+            
+            // Background & Colors
+            displaySection.className = `p-8 flex flex-col items-center transition-colors duration-500 ${currentEgg.color}`;
+            progressBar.className = `timer-circle ${currentEgg.textClass}`;
+            yolkVisual.className = `absolute bottom-3 w-10 h-10 sm:w-12 sm:h-12 rounded-full blur-md opacity-60 ${currentEgg.yolk}`;
+            eggVisual.className = `w-16 h-20 sm:w-20 sm:h-24 rounded-full border-4 border-white bg-white relative shadow-md flex items-center justify-center transition-all ${isRunning ? 'scale-110 shadow-lg' : 'scale-100'}`;
+        }
+
+        function renderOptions() {
+            optionsGrid.innerHTML = '';
+            EGG_TYPES.forEach(egg => {
+                const btn = document.createElement('button');
+                const isSelected = currentEgg.id === egg.id;
+                btn.className = `w-full p-4 rounded-2xl text-left border-2 flex items-center justify-between transition-all active:scale-[0.98] ${isSelected ? `${egg.border} ${egg.color} border-2 shadow-inner` : 'border-stone-50 hover:bg-stone-50'}`;
+                btn.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center ${egg.yolk} bg-opacity-20 shrink-0">
+                            <div class="w-3.5 h-3.5 rounded-full ${egg.yolk}"></div>
+                        </div>
+                        <div>
+                            <div class="font-bold text-sm sm:text-base text-slate-800">${egg.name}</div>
+                            <div class="text-[11px] text-slate-500">${egg.description}</div>
+                        </div>
+                    </div>
+                    ${isSelected ? `<svg viewBox="0 0 24 24" class="w-5 h-5 ${egg.textClass}" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3"/></svg>` : ''}
+                `;
+                btn.onclick = () => {
+                    stopTimer();
+                    currentEgg = egg;
+                    timeLeft = egg.time * 60;
+                    renderOptions();
+                    updateUI();
+                };
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        function startTimer() {
+            if (timeLeft <= 0) return;
+            isRunning = true;
+            btnStart.classList.add('hidden');
+            btnPause.classList.remove('hidden');
+            updateUI();
+            
+            timerId = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    finishTimer();
+                }
+                updateUI();
+            }, 1000);
+
+            if (navigator.wakeLock) {
+                navigator.wakeLock.request('screen').catch(() => {});
+            }
+        }
+
+        function stopTimer() {
+            isRunning = false;
+            clearInterval(timerId);
+            btnStart.classList.remove('hidden');
+            btnPause.classList.add('hidden');
+            updateUI();
+        }
+
+        function finishTimer() {
+            stopTimer();
+            modal.classList.remove('hidden');
+            finishName.innerText = currentEgg.name;
+            if (navigator.vibrate) try { navigator.vibrate([500, 200, 500]); } catch(e){}
+        }
+
+        btnStart.onclick = startTimer;
+        btnPause.onclick = stopTimer;
+        btnReset.onclick = () => {
+            stopTimer();
+            timeLeft = currentEgg.time * 60;
+            updateUI();
+        };
+        document.getElementById('btn-close-modal').onclick = () => {
+            modal.classList.add('hidden');
+            timeLeft = currentEgg.time * 60;
+            updateUI();
+        };
+
+        // Init
+        renderOptions();
+        updateUI();
+    </script>
+</body>
+</html>
